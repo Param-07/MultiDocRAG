@@ -2,7 +2,7 @@
 from datetime import datetime, timezone
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.processing.models.extracted_element import ExtractedElement
 
@@ -46,3 +46,23 @@ class ExtractionResult(BaseModel):
 
     elements: list[ExtractedElement] = Field(default_factory=list)
     errors: list[ExtractionError] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_extraction_consistency(self):
+        if self.status == ExtractionStatus.SUCCESS:
+            if self.errors:
+                raise ValueError("A successfull extraction cannot contains errors")
+
+        elif self.status == ExtractionStatus.PARTIAL_SUCCESS:
+            if not self.elements:
+                raise ValueError("A partially successfull extraction must contain at least one extracted element")
+            if not self.errors:
+                raise ValueError("A partially successfull extraction must contain at least one error")
+
+        else:
+            if self.elements:
+                raise ValueError("A failed extraction cannot have any usable extracted element")
+            if not self.errors:
+                raise ValueError("A failed extraction must have at least one error")
+
+        return self

@@ -1,0 +1,13 @@
+storage:
+  asset_directory: data/processed/assets
+
+pdf:
+  extract_images: true
+  extract_tables: true
+  preserve_layout: true
+
+ocr:
+  enabled: true
+  engine: tesseract
+  language: eng
+  confidence_threshold: 0.70
